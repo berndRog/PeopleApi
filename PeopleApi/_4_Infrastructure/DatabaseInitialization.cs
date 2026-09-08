@@ -16,7 +16,7 @@ public static class DatabaseInitialization {
       await dbContext.Database.EnsureCreatedAsync();
 
       // Fill an empty People table with deterministic demo data.
-      await Seed.SeedPeopleAsync(dbContext);
+      // await Seed.SeedPeopleAsync(dbContext);
    }
 }
 
