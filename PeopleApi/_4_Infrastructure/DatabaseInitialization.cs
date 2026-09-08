@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using PeopleApi._4_Infrastructure.Persistence;
 using PeopleApi._4_Infrastructure.Persistence.Database;
 
 namespace PeopleApi._4_Infrastructure;
@@ -13,10 +12,8 @@ public static class DatabaseInitialization {
       var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
       // Create the SQLite schema if no database exists yet.
+      // The People table intentionally stays empty; clients may seed it via the API.
       await dbContext.Database.EnsureCreatedAsync();
-
-      // Fill an empty People table with deterministic demo data.
-      // await Seed.SeedPeopleAsync(dbContext);
    }
 }
 
@@ -25,6 +22,9 @@ public static class DatabaseInitialization {
  * ----------------------
  * - Die Initialisierung wird beim Programmstart explizit ausgeführt.
  * - EnsureCreated eignet sich für dieses einfache Lehrbeispiel ohne Migrationen.
- * - Nur die People-Datenbank wird initialisiert. Für Images existiert bewusst
- *   keine Datenbanktabelle; das Image-Verzeichnis wird vom FileStorage angelegt.
+ * - Die WebAPI erzeugt nur das Schema und keine fachlichen Beispieldaten.
+ *   Ein Client kann GET /people/count verwenden und eine leere Datenbank bei Bedarf
+ *   über die normalen POST-Endpunkte initialisieren.
+ * - Für Images existiert bewusst keine Datenbanktabelle; das Image-Verzeichnis
+ *   wird vom FileStorage angelegt.
  */
