@@ -45,6 +45,11 @@ The Android client no longer has to coordinate People and Images itself.
 `POST /people` and `PUT /people/{id}` use `multipart/form-data` and can contain
 an optional image file.
 
+The `PeopleController` is only the HTTP adapter: it binds form/route data,
+converts `IFormFile` into the web-neutral `ImageUpload` and creates HTTP responses.
+The actual sequence of People persistence, image storage and compensation is
+implemented by `PersonUcCreate`, `PersonUcUpdate` and `PersonUcDelete`.
+
 ### Create
 
 `PersonCreateDto` contains the person data plus optional `Image`.
@@ -66,8 +71,8 @@ POST /people
    -> create Person with ImageUrl
 ```
 
-If the People operation fails after the image was stored, the server removes the
-new file again. This avoids an orphaned image after a failed create.
+If the People operation fails after the image was stored, the create use case
+removes the new file again. This avoids an orphaned image after a failed create.
 
 The client therefore does **not** send `ImageUrl` during create.
 
@@ -90,7 +95,7 @@ Image == null, RemoveImage == true
 ```
 
 `Image != null` together with `RemoveImage == true` is rejected with
-`400 Bad Request`.
+`400 Bad Request` by the update use case.
 
 The replacement order is intentional. The old image is deleted only after the
 Person successfully references the new image. If the People update fails, the
@@ -99,10 +104,11 @@ newly uploaded file is removed again and the old image remains available.
 ### Delete
 
 `DELETE /people/{id}` first deletes the People row. Only after the database
-operation succeeds does the API remove a locally managed profile image.
+operation succeeds does the delete use case remove a locally managed profile image.
 
-The People Core itself still contains no file-system code. The Web layer
-orchestrates the reusable Image use cases.
+The People Application contains the orchestration but no concrete file-system
+or EF-Core implementation. It depends on `IImageUseCases`, `IPersonRepository`
+and `IUnitOfWork`; the adapters remain in Infrastructure.
 
 ## Standalone Image API
 
