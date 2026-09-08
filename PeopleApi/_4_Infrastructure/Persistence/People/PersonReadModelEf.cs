@@ -27,6 +27,14 @@ internal sealed class PersonReadModelEf(
       return Result<IReadOnlyList<PersonDto>>.Success(dtos);
    }
 
+   public async Task<Result<int>> CountAsync(
+      CancellationToken ct
+   ) {
+      // Count is executed directly by the database and does not load entities.
+      var count = await dbContext.People.CountAsync(ct);
+      return Result<int>.Success(count);
+   }
+
    public async Task<Result<PersonDto>> FindByIdAsync(
       Guid id,
       CancellationToken ct
@@ -49,5 +57,8 @@ internal sealed class PersonReadModelEf(
  * - Das ReadModel kapselt lesende EF-Core-Abfragen getrennt von schreibenden
  *   Repository-Operationen.
  * - AsNoTracking reduziert unnötiges Tracking bei reinen GET-Anfragen.
- * - Die Web-Schicht erhält DTOs und keine EF-Core-Entitäten.
+ * - CountAsync wird als SQL-COUNT ausgeführt; es werden keine Person-Entitäten
+ *   materialisiert.
+ * - Die Web-Schicht erhält DTOs bzw. einfache Abfragewerte und keine EF-Core-
+ *   Entitäten.
  */
