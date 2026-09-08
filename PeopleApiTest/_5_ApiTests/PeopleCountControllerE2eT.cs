@@ -10,9 +10,9 @@ public sealed class PeopleCountControllerE2eT : TestBaseEndToEnd {
    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
 
    [Fact]
-   public async Task CountAsync_ok() {
+   public async Task CountAsync_emptyDatabase_returnsZero() {
       // Arrange
-      // Program initializes a fresh test database with 26 deterministic seed people.
+      // A fresh PeopleApi database is intentionally empty. Seed data belongs to the client.
 
       // Act
       var response = await Client.GetAsync(Url, _ct);
@@ -20,7 +20,7 @@ public sealed class PeopleCountControllerE2eT : TestBaseEndToEnd {
 
       // Assert
       response.StatusCode.Should().Be(HttpStatusCode.OK);
-      count.Should().Be(26);
+      count.Should().Be(0);
    }
 }
 
@@ -28,6 +28,7 @@ public sealed class PeopleCountControllerE2eT : TestBaseEndToEnd {
  * Lernziele und Didaktik
  * ----------------------
  * - Der Count-Endpunkt wird über den realen HTTP-Pfad geprüft.
- * - Der Client kann damit vor einem optionalen Seed prüfen, ob bereits Personen
- *   auf dem Server vorhanden sind, ohne die komplette Liste laden zu müssen.
+ * - Eine frisch erzeugte PeopleApi-Datenbank ist bewusst leer. Der Android-Client
+ *   kann dadurch count == 0 erkennen und seine Beispieldaten selbst übertragen.
+ * - Dafür muss nicht die komplette Personenliste geladen werden.
  */
