@@ -1,0 +1,20 @@
+@baseUrl = http://localhost:5080/peopleapi/v1
+@fileName = 00000000000000000000000000000000.jpg
+
+### Upload an image
+# In Rider/IntelliJ HTTP client replace ./sample.jpg with an existing local file.
+POST {{baseUrl}}/images
+Content-Type: multipart/form-data; boundary=Boundary
+
+--Boundary
+Content-Disposition: form-data; name="file"; filename="sample.jpg"
+Content-Type: image/jpeg
+
+< ./sample.jpg
+--Boundary--
+
+### Read image
+GET {{baseUrl}}/images/{{fileName}}
+
+### Delete image
+DELETE {{baseUrl}}/images/{{fileName}}

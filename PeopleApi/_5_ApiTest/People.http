@@ -1,0 +1,129 @@
+@baseUrl = http://localhost:5080/peopleapi/v1
+@personId = 01000000-0000-0000-0000-000000000000
+
+### All people
+GET {{baseUrl}}/people
+Accept: application/json
+
+### One person
+GET {{baseUrl}}/people/{{personId}}
+Accept: application/json
+
+### Create person without image
+POST {{baseUrl}}/people
+Content-Type: multipart/form-data; boundary=PeopleBoundary
+
+--PeopleBoundary
+Content-Disposition: form-data; name="FirstName"
+
+Micky
+--PeopleBoundary
+Content-Disposition: form-data; name="LastName"
+
+Mouse
+--PeopleBoundary
+Content-Disposition: form-data; name="Email"
+
+micky.mouse@example.org
+--PeopleBoundary
+Content-Disposition: form-data; name="Phone"
+
++49 30 123456
+--PeopleBoundary--
+
+### Create person with image - upload and ImageUrl are handled by the server
+POST {{baseUrl}}/people
+Content-Type: multipart/form-data; boundary=PeopleBoundary
+
+--PeopleBoundary
+Content-Disposition: form-data; name="FirstName"
+
+Minnie
+--PeopleBoundary
+Content-Disposition: form-data; name="LastName"
+
+Mouse
+--PeopleBoundary
+Content-Disposition: form-data; name="Email"
+
+minnie.mouse@example.org
+--PeopleBoundary
+Content-Disposition: form-data; name="Phone"
+
++49 30 123457
+--PeopleBoundary
+Content-Disposition: form-data; name="Image"; filename="test-image.png"
+Content-Type: image/png
+
+< ./test-image.png
+--PeopleBoundary--
+
+### Update person - keep current image (no Image field, RemoveImage=false)
+PUT {{baseUrl}}/people/{{personId}}
+Content-Type: multipart/form-data; boundary=PeopleBoundary
+
+--PeopleBoundary
+Content-Disposition: form-data; name="FirstName"
+
+Micky
+--PeopleBoundary
+Content-Disposition: form-data; name="LastName"
+
+Mouse
+--PeopleBoundary
+Content-Disposition: form-data; name="Email"
+
+micky.mouse@example.org
+--PeopleBoundary
+Content-Disposition: form-data; name="Phone"
+
++49 30 999999
+--PeopleBoundary
+Content-Disposition: form-data; name="RemoveImage"
+
+false
+--PeopleBoundary--
+
+### Update person - replace current image
+PUT {{baseUrl}}/people/{{personId}}
+Content-Type: multipart/form-data; boundary=PeopleBoundary
+
+--PeopleBoundary
+Content-Disposition: form-data; name="FirstName"
+
+Micky
+--PeopleBoundary
+Content-Disposition: form-data; name="LastName"
+
+Mouse
+--PeopleBoundary
+Content-Disposition: form-data; name="RemoveImage"
+
+false
+--PeopleBoundary
+Content-Disposition: form-data; name="Image"; filename="test-image.png"
+Content-Type: image/png
+
+< ./test-image.png
+--PeopleBoundary--
+
+### Update person - remove current image
+PUT {{baseUrl}}/people/{{personId}}
+Content-Type: multipart/form-data; boundary=PeopleBoundary
+
+--PeopleBoundary
+Content-Disposition: form-data; name="FirstName"
+
+Micky
+--PeopleBoundary
+Content-Disposition: form-data; name="LastName"
+
+Mouse
+--PeopleBoundary
+Content-Disposition: form-data; name="RemoveImage"
+
+true
+--PeopleBoundary--
+
+### Delete person - local profile image is cleaned up by the server
+DELETE {{baseUrl}}/people/{{personId}}
