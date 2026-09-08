@@ -7,11 +7,10 @@ public static class DiRoot {
    public static IServiceCollection AddApiVersioningForPeopleApi(
       this IServiceCollection services
    ) {
-      // Use version 1.0 whenever a client omits an explicit version.
+      // Define version 1.0 as the default version used by the versioning system.
       services
          .AddApiVersioning(options => {
             options.DefaultApiVersion = new ApiVersion(1, 0);
-            options.AssumeDefaultVersionWhenUnspecified = true;
             options.ReportApiVersions = true;
 
             // Read the API version from the URL segment /v{version}/.
