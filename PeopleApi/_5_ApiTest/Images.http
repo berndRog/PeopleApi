@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:5080/peopleapi/v1
-@fileName = 00000000000000000000000000000000.png
+@fileName = 0f38f8a013e94cf3b750d4e018653b3e.png
 
 ### Upload an image
 # Uses the test image stored next to this HTTP file.
