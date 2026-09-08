@@ -31,6 +31,7 @@ configured by `ImageStorage:Directory` (`App_Data/images` by default).
 ## Main endpoints
 
 - `GET    /peopleapi/v1/people`
+- `GET    /peopleapi/v1/people/count`
 - `GET    /peopleapi/v1/people/{id}`
 - `POST   /peopleapi/v1/people`
 - `PUT    /peopleapi/v1/people/{id}`
@@ -38,6 +39,9 @@ configured by `ImageStorage:Directory` (`App_Data/images` by default).
 - `POST   /peopleapi/v1/images`
 - `GET    /peopleapi/v1/images/{fileName}`
 - `DELETE /peopleapi/v1/images/{fileName}`
+
+`GET /peopleapi/v1/people/count` returns only the number of stored people. A
+client can use this inexpensive query before optionally sending its own seed data.
 
 ## People CRUD with server-side image orchestration
 
@@ -238,9 +242,10 @@ automated tests.
 
 ### People tests
 
-`PeopleControllerE2eT` covers among other things:
+The People end-to-end tests cover among other things:
 
 - GET all people,
+- GET people count,
 - POST without image,
 - POST with image including physical file creation and generated ImageUrl,
 - GET by id,
