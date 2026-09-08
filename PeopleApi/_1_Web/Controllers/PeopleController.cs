@@ -47,6 +47,26 @@ public sealed class PeopleController(
    }
 
    /// <summary>
+   /// Returns the number of stored people.
+   /// </summary>
+   /// <param name="ct">Cancellation token for the HTTP request.</param>
+   /// <returns>The number of stored people.</returns>
+   /// <response code="200">The count was returned successfully.</response>
+   /// <response code="500">The count could not be read.</response>
+   [HttpGet("count", Name = "People_Count")]
+   [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+   [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+   public async Task<ActionResult<int>> CountAsync(
+      CancellationToken ct
+   ) {
+      var result = await readModel.CountAsync(ct);
+      if (result.IsSuccess)
+         return Ok(result.Value);
+
+      return ToError(result.Error.Status, result.Error);
+   }
+
+   /// <summary>
    /// Returns one person identified by its UUID.
    /// </summary>
    /// <param name="id">UUID of the requested person.</param>
@@ -241,6 +261,8 @@ public sealed class PeopleController(
  * ----------------------
  * - Der PeopleController ist ein HTTP-Adapter: Er bindet Route/Form-Daten,
  *   übersetzt IFormFile in ImageUpload und erzeugt HTTP-Responses.
+ * - Lesende Operationen wie GetAll, Count und GetById werden direkt an das
+ *   IPersonReadModel delegiert.
  * - Der Controller entscheidet nicht über die fachliche Reihenfolge von People-
  *   und Image-Operationen. Diese Orchestrierung liegt in den People-UseCases.
  * - IFormFile bleibt damit vollständig in der Web-Schicht; die Application kennt
