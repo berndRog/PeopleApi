@@ -10,19 +10,31 @@ public sealed class PersonUseCases(
    PersonUcDelete delete
 ) : IPersonUseCases {
    // Delegate each operation to one focused use-case class.
-   public Task<Result<PersonDto>> CreateAsync(PersonCreateData dto, CancellationToken ct) =>
-      create.ExecuteAsync(dto, ct);
+   public Task<Result<PersonDto>> CreateAsync(
+      PersonCreateData dto,
+      CancellationToken ct
+   ) => create.ExecuteAsync(dto, ct);
 
-   public Task<Result<PersonDto>> UpdateAsync(Guid id, PersonUpdateData dto, CancellationToken ct) =>
-      update.ExecuteAsync(id, dto, ct);
+   public Task<Result<PersonDto>> UpdateAsync(
+      Guid id,
+      PersonUpdateData dto,
+      CancellationToken ct
+   ) => update.ExecuteAsync(id, dto, ct);
 
-   public Task<Result> DeleteAsync(Guid id, CancellationToken ct) =>
-      delete.ExecuteAsync(id, ct);
+   public Task<Result> DeleteAsync(
+      Guid id,
+      string imageBaseUrl,
+      CancellationToken ct
+   ) => delete.ExecuteAsync(id, imageBaseUrl, ct);
 }
 
 /*
  * Lernziele und Didaktik
  * ----------------------
- * - Die Fassade reduziert die Zahl der Abhängigkeiten des Controllers.
- * - Einzelne UseCases bleiben trotzdem klein, fokussiert und separat testbar.
+ * - Die Fassade reduziert die Zahl der Abhängigkeiten des Controllers auf einen
+ *   einzigen Schreib-Port für People.
+ * - Die eigentliche Orchestrierung liegt weiterhin in den drei fokussierten
+ *   UseCases PersonUcCreate, PersonUcUpdate und PersonUcDelete.
+ * - Dadurch bleibt jeder Anwendungsfall separat lesbar und testbar, während der
+ *   Controller nur mit einem gemeinsamen IPersonUseCases-Vertrag arbeitet.
  */

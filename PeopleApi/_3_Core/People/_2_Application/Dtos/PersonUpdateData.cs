@@ -1,18 +1,25 @@
+using PeopleApi._3_Core.Images._2_Application.Dtos;
+
 namespace PeopleApi._3_Core.People._2_Application.Dtos;
 
-// Internal application data used after the Web layer has resolved the image state.
+// Internal application data for the complete People-update use case.
 public sealed record PersonUpdateData(
    string FirstName,
    string LastName,
    string? Email,
    string? Phone,
-   string? ImageUrl
+   ImageUpload? Image,
+   bool RemoveImage,
+   string ImageBaseUrl
 );
 
 /*
  * Lernziele und Didaktik
  * ----------------------
- * - PersonUpdateData beschreibt den vollständigen neuen fachlichen Zustand.
- * - Ob ein Bild beibehalten, ersetzt oder entfernt wurde, ist an dieser Stelle
- *   bereits entschieden; der Core arbeitet nur noch mit der resultierenden URL.
+ * - PersonUpdateData transportiert die drei möglichen Bildoperationen in die
+ *   Application-Schicht: beibehalten, ersetzen oder entfernen.
+ * - Die Web-Schicht übersetzt nur IFormFile in ImageUpload; die Interpretation
+ *   von Image und RemoveImage findet im Update-UseCase statt.
+ * - Dadurch bleibt die fachliche Reihenfolge von Datei- und Datenbankoperationen
+ *   außerhalb des Controllers.
  */

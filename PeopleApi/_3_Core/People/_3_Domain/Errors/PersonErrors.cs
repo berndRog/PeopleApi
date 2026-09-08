@@ -34,6 +34,13 @@ public static class PersonErrors {
 
    public static readonly DomainError ImageUrlInvalid =
       new("person.image_url_invalid", "Image URL must be an absolute HTTP or HTTPS URL.", WebErrorStatus.BadRequest);
+
+   public static readonly DomainError InvalidImageOperation =
+      new(
+         "person.image_operation_invalid",
+         "Image and RemoveImage cannot be used at the same time.",
+         WebErrorStatus.BadRequest
+      );
 }
 
 /*
@@ -41,4 +48,6 @@ public static class PersonErrors {
  * ----------------------
  * - Feste Fehlerobjekte machen fachliche Fehlerfälle explizit und wiederverwendbar.
  * - Der Web-Status ist bereits kategorisiert, ohne ASP.NET-Core-Klassen zu referenzieren.
+ * - Auch die ungültige Kombination aus Image und RemoveImage wird als erwartbarer
+ *   Application-/DomainError modelliert und nicht direkt im Controller erzeugt.
  */
