@@ -17,9 +17,9 @@ public sealed class PeopleControllerE2eT : TestBaseEndToEnd {
    );
 
    [Fact]
-   public async Task GetAllAsync_ok() {
+   public async Task GetAllAsync_emptyDatabase_ok() {
       // Arrange
-      // Program initializes a fresh test database with deterministic seed people.
+      // A fresh PeopleApi database is intentionally empty. Seed data belongs to the client.
 
       // Act
       var response = await Client.GetAsync(Url, _ct);
@@ -29,9 +29,7 @@ public sealed class PeopleControllerE2eT : TestBaseEndToEnd {
       // Assert
       response.StatusCode.Should().Be(HttpStatusCode.OK);
       people.Should().NotBeNull();
-      people!.Count.Should().Be(26);
-      people[0].LastName.Should().Be("Arndt");
-      people[^1].LastName.Should().Be("Zander");
+      people.Should().BeEmpty();
    }
 
    [Fact]
@@ -384,6 +382,8 @@ public sealed class PeopleControllerE2eT : TestBaseEndToEnd {
  * Lernziele und Didaktik
  * ----------------------
  * - Die Tests prüfen People-CRUD über den realen HTTP-Endpunkt statt über Mocks.
+ * - Eine neue Testdatenbank ist bewusst leer; Beispieldaten werden nicht mehr von
+ *   der WebAPI erzeugt, sondern können vom Android-Client gesendet werden.
  * - People-POST und -PUT verwenden multipart/form-data, weil optional eine
  *   Bilddatei Bestandteil desselben fachlichen Requests sein kann.
  * - Create mit Bild prüft, dass die WebAPI automatisch eine ImageUrl erzeugt und
