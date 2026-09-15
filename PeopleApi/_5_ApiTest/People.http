@@ -1,0 +1,64 @@
+@baseUrl = http://localhost:5080/peopleapi/v1
+@personId = 01000000-0000-0000-0000-000000000000
+
+### Count people
+GET {{baseUrl}}/people/count
+Accept: application/json
+
+### All people
+GET {{baseUrl}}/people
+Accept: application/json
+
+### One person
+GET {{baseUrl}}/people/{{personId}}
+Accept: application/json
+
+### Create person with a local Android image reference
+POST {{baseUrl}}/people
+Content-Type: application/json
+
+{
+  "id": "{{personId}}",
+  "firstName": "Micky",
+  "lastName": "Mouse",
+  "email": "micky.mouse@example.org",
+  "phone": "+49 30 123456",
+  "imageUrl": "/data/user/0/de.rogallab.mobile/files/people510/micky.jpg"
+}
+
+### Update person and replace the imageUrl string
+PUT {{baseUrl}}/people/{{personId}}
+Content-Type: application/json
+
+{
+  "id": "{{personId}}",
+  "firstName": "Micky",
+  "lastName": "Mouse",
+  "email": "micky.mouse@example.org",
+  "phone": "+49 30 999999",
+  "imageUrl": "content://media/external/images/media/42"
+}
+
+### Update person and clear imageUrl
+PUT {{baseUrl}}/people/{{personId}}
+Content-Type: application/json
+
+{
+  "id": "{{personId}}",
+  "firstName": "Micky",
+  "lastName": "Mouse",
+  "email": "micky.mouse@example.org",
+  "phone": "+49 30 999999",
+  "imageUrl": null
+}
+
+### Delete person
+DELETE {{baseUrl}}/people/{{personId}}
+
+/*
+ * Lernziele und Didaktik
+ * ----------------------
+ * - POST und PUT senden genau ein JSON-Objekt.
+ * - imageUrl ist ein nullable String und enthält keine Bilddaten.
+ * - Die API speichert die Referenz, interpretiert oder öffnet sie aber nicht.
+ */

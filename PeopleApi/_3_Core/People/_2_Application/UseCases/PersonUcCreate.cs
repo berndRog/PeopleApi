@@ -1,0 +1,58 @@
+using PeopleApi._2_BuildingBlocks;
+using PeopleApi._2_BuildingBlocks._1_Ports;
+using PeopleApi._3_Core.People._1_Ports;
+using PeopleApi._3_Core.People._2_Application.Dtos;
+using PeopleApi._3_Core.People._2_Application.Mappings;
+using PeopleApi._3_Core.People._3_Domain.Entities;
+using PeopleApi._3_Core.People._3_Domain.Errors;
+
+namespace PeopleApi._3_Core.People._2_Application.UseCases;
+
+public sealed class PersonUcCreate(
+   IPersonRepository repository,
+   IUnitOfWork unitOfWork,
+   ILogger<PersonUcCreate> logger
+) {
+   public async Task<Result<PersonDto>> ExecuteAsync(
+      PersonDto dto,
+      CancellationToken ct
+   ) {
+      // Android normally supplies the UUID. Empty keeps the endpoint usable for
+      // other clients and lets the server generate one.
+      var id = dto.Id == Guid.Empty ? Guid.NewGuid() : dto.Id;
+
+      if (await repository.ExistsByIdAsync(id, ct))
+         return Result<PersonDto>.Failure(PersonErrors.IdAlreadyExists);
+
+      var resultPerson = Person.Create(
+         id,
+         dto.FirstName,
+         dto.LastName,
+         dto.Email,
+         dto.Phone,
+         dto.ImageUrl
+      );
+      if (resultPerson.IsFailure)
+         return Result<PersonDto>.Failure(resultPerson.Error);
+
+      var person = resultPerson.Value;
+      repository.Add(person);
+      var rows = await unitOfWork.SaveAllChangesAsync(nameof(PersonUcCreate), ct);
+
+      logger.LogInformation(
+         "Person created: personId={PersonId} rows={Rows}",
+         person.Id,
+         rows
+      );
+
+      return Result<PersonDto>.Success(person.ToPersonDto());
+   }
+}
+
+/*
+ * Lernziele und Didaktik
+ * ----------------------
+ * - Create prüft die Id, erzeugt eine gültige Domain-Entität und speichert sie.
+ * - ImageUrl durchläuft denselben Weg wie Email und Phone und bleibt ein String.
+ * - Es gibt keine Dateioperation und daher auch keine Kompensationslogik.
+ */
