@@ -3,6 +3,7 @@ using PeopleApi._2_BuildingBlocks._1_Ports;
 using PeopleApi._3_Core.People._1_Ports;
 using PeopleApi._4_Infrastructure.Persistence.Database;
 using PeopleApi._4_Infrastructure.Persistence.People;
+using PeopleApi._4_Infrastructure.Time;
 
 namespace PeopleApi._4_Infrastructure;
 
@@ -25,6 +26,7 @@ public static class DiInfrastructureModule {
       services.AddScoped<IPersonRepository, PersonRepositoryEf>();
       services.AddScoped<IPersonReadModel, PersonReadModelEf>();
       services.AddScoped<IUnitOfWork, UnitOfWorkEf>();
+      services.AddSingleton<IClock, SystemClock>();
 
       return services;
    }

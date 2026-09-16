@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PeopleApi._3_Core.People._3_Domain.Entities;
+using PeopleApi._4_Infrastructure.Persistence.Converters;
 using PeopleApi._4_Infrastructure.Persistence.People;
 
 namespace PeopleApi._4_Infrastructure.Persistence.Database;
@@ -12,7 +13,7 @@ public sealed class AppDbContext(
 
    protected override void OnModelCreating(ModelBuilder modelBuilder) {
       // Keep persistence mapping outside the domain entity.
-      modelBuilder.ApplyConfiguration(new ConfigPerson());
+      modelBuilder.ApplyConfiguration(new ConfigPerson(new UtcDateTimeConverter()));
       base.OnModelCreating(modelBuilder);
    }
 }

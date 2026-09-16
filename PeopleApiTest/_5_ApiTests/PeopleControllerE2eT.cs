@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
 using AwesomeAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using PeopleApi._3_Core.People._2_Application.Dtos;
+using PeopleApi._4_Infrastructure.Persistence.Database;
 using PeopleApiTest.TestInfrastructure;
 
 namespace PeopleApiTest._5_ApiTests;
@@ -38,6 +41,36 @@ public sealed class PeopleControllerE2eT : TestBaseEndToEnd {
    }
 
    [Fact]
+   public async Task CreateAsync_formattedContactData_isStoredCanonical() {
+      var request = NewPerson() with {
+         Email = "  Ada.Lovelace@Example.ORG ",
+         Phone = "+49 (0)30 / 1234-56"
+      };
+
+      var response = await Client.PostAsJsonAsync(Url, request, _ct);
+      var actual = await response.Content.ReadFromJsonAsync<PersonDto>(_ct);
+
+      response.StatusCode.Should().Be(HttpStatusCode.Created);
+      actual.Should().NotBeNull();
+      actual!.Email.Should().Be("ada.lovelace@example.org");
+      actual.Phone.Should().Be("+4930123456");
+   }
+
+   [Fact]
+   public async Task CreateAsync_persistedTimestamps_areUtcDateTime() {
+      var created = await CreatePersonAsync();
+
+      using var scope = Factory.Services.CreateScope();
+      var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+      var person = await dbContext.People
+         .AsNoTracking()
+         .SingleAsync(item => item.Id == created.Id, _ct);
+
+      person.CreatedAt.Kind.Should().Be(DateTimeKind.Utc);
+      person.UpdatedAt.Kind.Should().Be(DateTimeKind.Utc);
+   }
+
+   [Fact]
    public async Task GetByIdAsync_ok() {
       var created = await CreatePersonAsync(LocalImagePath);
 
@@ -55,7 +88,7 @@ public sealed class PeopleControllerE2eT : TestBaseEndToEnd {
          FirstName = "Grace",
          LastName = "Hopper",
          Email = "grace.hopper@example.org",
-         Phone = "+49 30 987654",
+         Phone = "+4930987654",
          ImageUrl = "content://media/external/images/media/42"
       };
 
@@ -167,7 +200,7 @@ public sealed class PeopleControllerE2eT : TestBaseEndToEnd {
       "Ada",
       "Lovelace",
       "ada.lovelace@example.org",
-      "+49 30 123456",
+      "+4930123456",
       imageUrl
    );
 }

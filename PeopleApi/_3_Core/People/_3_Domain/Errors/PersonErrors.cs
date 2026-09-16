@@ -23,12 +23,6 @@ public static class PersonErrors {
    public static readonly DomainError LastNameTooLong =
       new("person.last_name_too_long", "Last name is too long.", WebErrorStatus.BadRequest);
 
-   public static readonly DomainError EmailInvalid =
-      new("person.email_invalid", "Email address is invalid.", WebErrorStatus.BadRequest);
-
-   public static readonly DomainError PhoneInvalid =
-      new("person.phone_invalid", "Phone number is invalid.", WebErrorStatus.BadRequest);
-
    public static readonly DomainError ImageUrlInvalid =
       new("person.image_url_invalid", "Image URL is too long.", WebErrorStatus.BadRequest);
 }

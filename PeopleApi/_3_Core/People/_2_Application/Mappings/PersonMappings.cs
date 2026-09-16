@@ -10,8 +10,8 @@ public static class PersonMappings {
          person.Id,
          person.FirstName,
          person.LastName,
-         person.Email,
-         person.Phone,
+         person.EmailVo?.Value,
+         person.PhoneVo?.Value,
          person.ImageUrl
       );
 }

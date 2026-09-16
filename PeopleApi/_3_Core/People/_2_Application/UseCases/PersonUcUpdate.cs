@@ -4,12 +4,14 @@ using PeopleApi._3_Core.People._1_Ports;
 using PeopleApi._3_Core.People._2_Application.Dtos;
 using PeopleApi._3_Core.People._2_Application.Mappings;
 using PeopleApi._3_Core.People._3_Domain.Errors;
+using PeopleApi._2_BuildingBlocks._3_Domain.ValueObjects;
 
 namespace PeopleApi._3_Core.People._2_Application.UseCases;
 
 public sealed class PersonUcUpdate(
    IPersonRepository repository,
    IUnitOfWork unitOfWork,
+   IClock clock,
    ILogger<PersonUcUpdate> logger
 ) {
    public async Task<Result<PersonDto>> ExecuteAsync(
@@ -21,12 +23,29 @@ public sealed class PersonUcUpdate(
       if (person is null)
          return Result<PersonDto>.Failure(PersonErrors.PersonNotFound);
 
+      EmailVo? emailVo = null;
+      if (!string.IsNullOrWhiteSpace(dto.Email)) {
+         var resultEmail = EmailVo.Create(dto.Email);
+         if (resultEmail.IsFailure)
+            return Result<PersonDto>.Failure(resultEmail.Error);
+         emailVo = resultEmail.Value;
+      }
+
+      PhoneVo? phoneVo = null;
+      if (!string.IsNullOrWhiteSpace(dto.Phone)) {
+         var resultPhone = PhoneVo.Create(dto.Phone);
+         if (resultPhone.IsFailure)
+            return Result<PersonDto>.Failure(resultPhone.Error);
+         phoneVo = resultPhone.Value;
+      }
+
       var resultUpdate = person.Update(
          dto.FirstName,
          dto.LastName,
-         dto.Email,
-         dto.Phone,
-         dto.ImageUrl
+         emailVo,
+         phoneVo,
+         dto.ImageUrl,
+         clock.UtcNow
       );
       if (resultUpdate.IsFailure)
          return Result<PersonDto>.Failure(resultUpdate.Error);

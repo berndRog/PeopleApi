@@ -14,7 +14,7 @@ The project introduces one concern at a time:
 
 1. Android sends and receives JSON with Retrofit.
 2. A transport DTO is mapped to the domain model.
-3. The API validates and persists a person.
+3. The API validates and persists a person using the familiar domain building blocks.
 4. Image transfer is added only in the later People Images example.
 
 The distinction on Android is:
@@ -78,11 +78,18 @@ The main components are:
 
 - `PeopleController`: translates HTTP requests and responses.
 - `PersonDto`: JSON request and response model.
-- `Person`: domain entity with validation and normalization.
+- `Entity` and `AggregateRoot`: shared identity and lifecycle base classes.
+- `EmailVo` and `PhoneVo`: value objects for validation and canonical storage.
+- `Person`: aggregate root with validation and normalization.
 - `PersonUcCreate`, `PersonUcUpdate`, `PersonUcDelete`: write use cases.
 - `IPersonReadModel`: read queries.
 - `PersonRepositoryEf` and `AppDbContext`: SQLite persistence.
 - `DiRoot`, `DiPeople`, `DiInfrastructureModule`: dependency injection.
+
+Server-internal timestamps use `DateTime` with `DateTimeKind.Utc`. `IClock`
+supplies the current UTC time. Because SQLite does not retain `DateTimeKind`,
+an EF Core value converter restores `Utc` whenever `CreatedAt` and `UpdatedAt`
+are materialized.
 
 The database starts empty. The Android client calls `GET /people/count` and
 can seed its examples through the normal POST endpoint.
@@ -116,7 +123,8 @@ dotnet test PeopleApi.sln
 
 The end-to-end tests use `WebApplicationFactory` and a separate temporary
 SQLite database. They verify JSON CRUD, local image-reference strings,
-validation, duplicate identifiers and not-found responses.
+validation, value-object normalization, UTC timestamp persistence, duplicate
+identifiers and not-found responses.
 
 ## Relation to PeopleMultipartApi
 

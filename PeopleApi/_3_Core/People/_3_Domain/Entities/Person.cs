@@ -1,31 +1,21 @@
-using System.Text.RegularExpressions;
 using PeopleApi._2_BuildingBlocks;
+using PeopleApi._2_BuildingBlocks._3_Domain.Entities;
+using PeopleApi._2_BuildingBlocks._3_Domain.ValueObjects;
 using PeopleApi._3_Core.People._3_Domain.Errors;
 
 namespace PeopleApi._3_Core.People._3_Domain.Entities;
 
-public sealed class Person {
+public sealed class Person : AggregateRoot {
    // Keep validation limits close to the domain object that enforces them.
    public const int NameMinLength = 2;
    public const int NameMaxLength = 50;
-   public const int PhoneDigitsMin = 6;
-   public const int PhoneDigitsMax = 15;
    public const int ImageUrlMaxLength = 2048;
 
-   // The regex intentionally stays small for the teaching example. It verifies
-   // the basic shape of an email address without trying to implement RFC 5322.
-   private static readonly Regex EmailRegex =
-      new(
-         @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
-         RegexOptions.Compiled | RegexOptions.CultureInvariant
-      );
-
    // Setters are private so callers cannot bypass domain validation.
-   public Guid Id { get; private set; }
    public string FirstName { get; private set; } = string.Empty;
    public string LastName { get; private set; } = string.Empty;
-   public string? Email { get; private set; }
-   public string? Phone { get; private set; }
+   public EmailVo? EmailVo { get; private set; }
+   public PhoneVo? PhoneVo { get; private set; }
    public string? ImageUrl { get; private set; }
 
    // Derived values are calculated from the current state and need no persistence.
@@ -39,15 +29,15 @@ public sealed class Person {
       Guid id,
       string firstName,
       string lastName,
-      string? email,
-      string? phone,
+      EmailVo? emailVo,
+      PhoneVo? phoneVo,
       string? imageUrl
    ) {
       Id = id;
       FirstName = firstName;
       LastName = lastName;
-      Email = email;
-      Phone = phone;
+      EmailVo = emailVo;
+      PhoneVo = phoneVo;
       ImageUrl = imageUrl;
    }
 
@@ -55,38 +45,40 @@ public sealed class Person {
       Guid id,
       string firstName,
       string lastName,
-      string? email,
-      string? phone,
-      string? imageUrl
+      EmailVo? emailVo,
+      PhoneVo? phoneVo,
+      string? imageUrl,
+      DateTime createdAt
    ) {
       // Validate and normalize before an entity can enter the valid domain state.
-      var validation = ValidateAndNormalize(firstName, lastName, email, phone, imageUrl);
+      var validation = ValidateAndNormalize(firstName, lastName, imageUrl);
       if (validation.IsFailure)
          return Result<Person>.Failure(validation.Error);
 
       // Construct the entity only from already normalized values.
       var values = validation.Value;
-      return Result<Person>.Success(
-         new Person(
-            id,
-            values.FirstName,
-            values.LastName,
-            values.Email,
-            values.Phone,
-            values.ImageUrl
-         )
+      var person = new Person(
+         id,
+         values.FirstName,
+         values.LastName,
+         emailVo,
+         phoneVo,
+         values.ImageUrl
       );
+      person.Initialize(createdAt);
+      return Result<Person>.Success(person);
    }
 
    public Result Update(
       string firstName,
       string lastName,
-      string? email,
-      string? phone,
-      string? imageUrl
+      EmailVo? emailVo,
+      PhoneVo? phoneVo,
+      string? imageUrl,
+      DateTime updatedAt
    ) {
       // Reuse the same rules for creation and later modification.
-      var validation = ValidateAndNormalize(firstName, lastName, email, phone, imageUrl);
+      var validation = ValidateAndNormalize(firstName, lastName, imageUrl);
       if (validation.IsFailure)
          return Result.Failure(validation.Error);
 
@@ -95,24 +87,21 @@ public sealed class Person {
       var values = validation.Value;
       FirstName = values.FirstName;
       LastName = values.LastName;
-      Email = values.Email;
-      Phone = values.Phone;
+      EmailVo = emailVo;
+      PhoneVo = phoneVo;
       ImageUrl = values.ImageUrl;
+      Touch(updatedAt);
       return Result.Success();
    }
 
    private static Result<NormalizedPerson> ValidateAndNormalize(
       string firstName,
       string lastName,
-      string? email,
-      string? phone,
       string? imageUrl
    ) {
       // Trim mandatory names and convert optional blank strings to null.
       var normalizedFirstName = firstName?.Trim() ?? string.Empty;
       var normalizedLastName = lastName?.Trim() ?? string.Empty;
-      var normalizedEmail = NullIfBlank(email);
-      var normalizedPhone = NullIfBlank(phone);
       var normalizedImageUrl = NullIfBlank(imageUrl);
 
       // Return the first violated business rule as a typed domain error.
@@ -124,10 +113,6 @@ public sealed class Person {
          return Result<NormalizedPerson>.Failure(PersonErrors.LastNameTooShort);
       if (normalizedLastName.Length > NameMaxLength)
          return Result<NormalizedPerson>.Failure(PersonErrors.LastNameTooLong);
-      if (normalizedEmail is not null && !EmailRegex.IsMatch(normalizedEmail))
-         return Result<NormalizedPerson>.Failure(PersonErrors.EmailInvalid);
-      if (normalizedPhone is not null && !IsPhoneValid(normalizedPhone))
-         return Result<NormalizedPerson>.Failure(PersonErrors.PhoneInvalid);
       if (normalizedImageUrl is not null && !IsImageUrlValid(normalizedImageUrl))
          return Result<NormalizedPerson>.Failure(PersonErrors.ImageUrlInvalid);
 
@@ -135,32 +120,9 @@ public sealed class Person {
          new NormalizedPerson(
             normalizedFirstName,
             normalizedLastName,
-            normalizedEmail,
-            normalizedPhone,
             normalizedImageUrl
          )
       );
-   }
-
-   private static bool IsPhoneValid(string phone) {
-      // Permit common display separators but reject arbitrary letters/symbols.
-      var hasAllowedCharacters = phone.All(character =>
-         char.IsDigit(character) ||
-         character == '+' || character == ' ' || character == '-' ||
-         character == '/' || character == '.' || character == '(' || character == ')'
-      );
-      if (!hasAllowedCharacters)
-         return false;
-
-      // A plus sign is optional, but if present it must occur exactly once first.
-      var plusCount = phone.Count(character => character == '+');
-      var hasValidPlus = plusCount == 0 || (plusCount == 1 && phone.StartsWith('+'));
-      if (!hasValidPlus)
-         return false;
-
-      // Count only digits when applying the minimum/maximum phone length.
-      var digitCount = phone.Count(char.IsDigit);
-      return digitCount is >= PhoneDigitsMin and <= PhoneDigitsMax;
    }
 
    private static bool IsImageUrlValid(string imageUrl) =>
@@ -175,8 +137,6 @@ public sealed class Person {
    private sealed record NormalizedPerson(
       string FirstName,
       string LastName,
-      string? Email,
-      string? Phone,
       string? ImageUrl
    );
 }
@@ -188,6 +148,8 @@ public sealed class Person {
  *   Update-Methoden. Ungültige Zustände sollen gar nicht erst entstehen.
  * - Validierung und Normalisierung sind Domänenlogik und gehören nicht in den
  *   Controller oder in EF-Core-Konfigurationen.
+ * - EmailVo und PhoneVo kapseln Validierung, Normalisierung und Wertgleichheit.
+ * - Als AggregateRoot besitzt Person interne UTC-Zeitstempel für den Lebenszyklus.
  * - ImageUrl ist ein optionaler String und keine Beziehung zu einer Image-Entity.
  *   Die API interpretiert oder öffnet diese clientseitige Referenz nicht.
  * - Create und Update verwenden dieselbe Regelmenge, sodass sich die Regeln nicht
